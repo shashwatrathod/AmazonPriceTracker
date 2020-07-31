@@ -26,6 +26,7 @@ Other than that, you can hit refresh to force the app to refresh the list at any
  - You just have to paste the URL once, the app will take care of the rest.
  - You can mention the price at which you want to buy the item at.
  - Get notifications when the price of a desired item falls below or to the desired price.
+ - Right click on any list item to Visit link, copy link, or to remove item from the list.
  - GUI instead of CLI !
 
 
