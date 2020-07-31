@@ -9,7 +9,7 @@
   <Identity
     Name="ae56b617-877e-4789-a34f-636d386ba315"
     Publisher="CN=Shashwat"
-    Version="1.0.4.0" />
+    Version="1.0.5.0" />
 
   <mp:PhoneIdentity PhoneProductId="ae56b617-877e-4789-a34f-636d386ba315" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
