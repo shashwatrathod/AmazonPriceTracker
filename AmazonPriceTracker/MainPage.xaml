@@ -18,9 +18,10 @@
             <RowDefinition Height="120" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBox Grid.Row="0" x:Name="url_text_box" Margin="12,41,600,0" PlaceholderText="Enter URL" TextWrapping="NoWrap" VerticalAlignment="Top" Height="40" TextAlignment="Center" FontSize="18" RenderTransformOrigin="0.5,0.5" />
-        <TextBox Grid.Row="0" x:Name="desired_price_text_box" Margin="630,41,184,0" PlaceholderText="Enter price" TextWrapping="NoWrap" VerticalAlignment="Top" Height="40" TextAlignment="Center" FontSize="18" />
-        <Button Grid.Row="0" x:Name="add_button" Content="ADD" Margin="1047,41,0,0" VerticalAlignment="Top" Height="40" Width="120" RenderTransformOrigin="0.558,0.53" FontSize="18" Click="add_button_Click" />
+        <TextBox x:Name="url_text_box" Margin="12,0,522,0" PlaceholderText="Enter URL" TextWrapping="NoWrap" VerticalAlignment="Center" Height="40" TextAlignment="Center" FontSize="18" RenderTransformOrigin="0.5,0.5" />
+        <TextBox x:Name="desired_price_text_box" Margin="692,0,325,0" PlaceholderText="Enter price" TextWrapping="NoWrap" VerticalAlignment="Center" Height="40" TextAlignment="Center" FontSize="18" />
+        <Button x:Name="add_button" Content="ADD" Margin="890,0,0,0" Height="40" Width="105" RenderTransformOrigin="0.558,0.53" FontSize="18" Click="add_button_Click" />
+        <Button Content="REFRESH" Margin="1013,0,0,0" RenderTransformOrigin="0.129,0.176" Height="41" Width="104" FontSize="18" Click="refresh_button_click"/>
         <ProgressRing x:Name="progressRing" Grid.Row="0" HorizontalAlignment="Right"/>
 
         <controls:DataGrid x:Name="dataGrid"
@@ -71,8 +72,9 @@
                     Binding="{Binding productStatus}"
                     FontSize="16"
                     />
-                
+
             </controls:DataGrid.Columns>
         </controls:DataGrid>
+       
     </Grid>
 </Page>

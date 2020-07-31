@@ -40,11 +40,13 @@ namespace AmazonPriceTracker
     public sealed partial class MainPage : Page
     {
 
-        private ObservableCollection<AmazonItem> AmazonItems;
+        private ObservableCollection<AmazonItem> AmazonItems = new ObservableCollection<AmazonItem>();
+
+        private Library lib = new Library();
         public MainPage()
         {
             this.InitializeComponent();
-            Library lib = new Library();
+            
             lib.Init();
             lib.Toggle();
         }
@@ -60,11 +62,6 @@ namespace AmazonPriceTracker
                     AmazonItems = await helper.ReadFileAsync<ObservableCollection<AmazonItem>>("AmazonItems");
                 }
 
-                foreach(var item in AmazonItems)
-                {
-                    Debug.WriteLine(item.ToString());
-                }
-                
                 dataGrid.ItemsSource = AmazonItems;
                 return null;
             }
@@ -113,6 +110,7 @@ namespace AmazonPriceTracker
                     _ = StoreURLDataAsync(url, desired_price);
                     AmazonItems.Add(item);
                     await storeAmazonItemsAsync();
+                    await lib.Toggle();
                 }
                 catch(Exception er)
                 {
@@ -128,19 +126,12 @@ namespace AmazonPriceTracker
                     desired_price_text_box.Text = "";
                 }
             }
-            //Update the UI
             
         }
 
         private async System.Threading.Tasks.Task StoreURLDataAsync(String url, String price)
         {
             Windows.Storage.StorageFolder storageFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
-            /*
-            if (storageFolder == null)
-            {
-                storageFolder = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFolderAsync("Data");
-            }
-            */
             Windows.Storage.StorageFile file = await storageFolder.CreateFileAsync("urls.txt", Windows.Storage.CreationCollisionOption.OpenIfExists);
 
             await Windows.Storage.FileIO.AppendTextAsync(file, url + " -br- " + price);
@@ -283,8 +274,10 @@ namespace AmazonPriceTracker
 
         private async void DataGrid_Loaded(object sender, RoutedEventArgs e)
         {
+            progressRing.IsActive = true;
            await getAmazonItemsAsync();
            await updateAmazonItemsList();
+            progressRing.IsActive = false;
         }
 
         private async Task<object> updateAmazonItemsList()
@@ -354,6 +347,13 @@ namespace AmazonPriceTracker
 
             var toast = new ToastNotification(content.GetXml());
             ToastNotificationManager.CreateToastNotifier().Show(toast);
+        }
+
+        private async void refresh_button_click(object sender, RoutedEventArgs e)
+        {
+            progressRing.IsActive = true;           
+            _ = await updateAmazonItemsList();
+            progressRing.IsActive = false;
         }
     }
 }
