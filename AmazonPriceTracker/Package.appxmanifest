@@ -7,15 +7,15 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="ae56b617-877e-4789-a34f-636d386ba315"
+    Name="AmazonPriceTracker"
     Publisher="CN=Shashwat"
-    Version="1.0.6.0" />
+    Version="1.0.7.0" />
 
   <mp:PhoneIdentity PhoneProductId="ae56b617-877e-4789-a34f-636d386ba315" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>AmazonPriceTracker</DisplayName>
-    <PublisherDisplayName>HOME</PublisherDisplayName>
+    <PublisherDisplayName>Shashwat Rathod</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
