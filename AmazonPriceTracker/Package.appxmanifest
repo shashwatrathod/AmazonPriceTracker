@@ -40,6 +40,14 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+        <Extension Category="windows.backgroundTasks" EntryPoint="AmazonPriceTrackerBackground.BackgroundTask">
+          <BackgroundTasks>
+            <Task Type="systemEvent"/>
+            <Task Type="general"/>
+          </BackgroundTasks>
+        </Extension>
+      </Extensions>
     </Application>
   </Applications>
 

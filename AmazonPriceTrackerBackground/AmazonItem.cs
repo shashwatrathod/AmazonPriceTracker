@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AmazonPriceTracker
+namespace AmazonPriceTrackerBackground
 {
-    class AmazonItem
+    public sealed class AmazonItem
     {
         public String productTitle { get; set; }
         public double productPrice { get; set; }
@@ -31,19 +31,11 @@ namespace AmazonPriceTracker
         }
 
         override
-        public String ToString()
+        public sealed String ToString()
         {
             return productTitle + " -br- " + productStatus + " -br- " + productPrice + " -br- " + productURL;
         }
 
-        public List<String> getItemProperties()
-        {
-            List<String> itemList = new List<string>();
-            itemList.Append(productTitle);
-            itemList.Append(productStatus);
-            itemList.Append(productPrice.ToString());
-            itemList.Append(productURL);
-            return itemList;
-        }
+        
     }
 }

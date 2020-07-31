@@ -1,52 +1,48 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using Microsoft.Toolkit.Uwp.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Microsoft.Toolkit.Uwp;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 using System.Net.Http;
-using HtmlAgilityPack;
-using System.Web;
-using System.Diagnostics;
-using Windows.Storage;
-using Json;
-using Newtonsoft.Json;
-using System.Security.Cryptography;
-using Windows.UI.Popups;
-using Windows.ApplicationModel.DataTransfer;
-using Microsoft.Toolkit.Uwp.Helpers;
+using System.Text;
 using System.Threading.Tasks;
-using AmazonPriceTrackerBackground;
-using Microsoft.Toolkit.Uwp.Notifications;
+using System.Web;
+using Windows.ApplicationModel.Background;
 using Windows.UI.Notifications;
+using Microsoft.Toolkit.Uwp.Notifications; // Notifications library
+using System.Diagnostics;
 
-// -br- is the delimeter
-
-namespace AmazonPriceTracker
+namespace AmazonPriceTrackerBackground 
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MainPage : Page
-    {
 
+    public sealed class BackgroundTask : IBackgroundTask
+    {
+        BackgroundTaskDeferral _deferral;
         private ObservableCollection<AmazonItem> AmazonItems;
-        public MainPage()
+        public async void Run(IBackgroundTaskInstance taskInstance)
         {
-            this.InitializeComponent();
-            Library lib = new Library();
-            lib.Init();
-            lib.Toggle();
+            _deferral = taskInstance.GetDeferral();
+
+            try
+            {
+                _ = await updateAmazonItemsList();
+                foreach (AmazonItem item in AmazonItems)
+                {
+                    if (item.productPrice <= item.desiredPrice)
+                    {
+                        createWindowsToast(item);
+                    }
+                }
+
+                Debug.WriteLine("Executed BG Task");
+            }
+            catch(Exception e) 
+            {
+                Debug.WriteLine(e.StackTrace);
+            }
+
+            _deferral.Complete();
         }
 
         private async Task<object> getAmazonItemsAsync()
@@ -58,21 +54,13 @@ namespace AmazonPriceTracker
                 if (await helper.FileExistsAsync("AmazonItems"))
                 {
                     AmazonItems = await helper.ReadFileAsync<ObservableCollection<AmazonItem>>("AmazonItems");
+                    return null;
                 }
 
-                foreach(var item in AmazonItems)
-                {
-                    Debug.WriteLine(item.ToString());
-                }
-                
-                dataGrid.ItemsSource = AmazonItems;
                 return null;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Debug.WriteLine(e.StackTrace);
-                AmazonItems = new ObservableCollection<AmazonItem>();
-                Console.WriteLine(e.StackTrace);
                 return null;
             }
         }
@@ -87,78 +75,16 @@ namespace AmazonPriceTracker
             var helper = new LocalObjectStorageHelper();
 
             await helper.SaveFileAsync("AmazonItems", AmazonItems);
-
             return null;
-        }
 
-        private async void add_button_Click(object sender, RoutedEventArgs e)
-        {
-            progressRing.IsActive = true;
-            String url = url_text_box.Text;
-            String desired_price = desired_price_text_box.Text;
-
-            List<String> itemProperties = await getAmazonItemFromURLAsync(url);
-
-            
-            if(itemProperties != null)
-            {
-                try
-                {
-                    AmazonItem item = new AmazonItem(itemProperties[0], itemProperties[1], double.Parse(desired_price.Trim()), itemProperties[2], itemProperties[3]);
-                    if (item.productPrice <= item.desiredPrice)
-                    {
-                        createWindowsToast(item);
-                    }
-                    _ = AppendItemDataAsync(item);
-                    _ = StoreURLDataAsync(url, desired_price);
-                    AmazonItems.Add(item);
-                    await storeAmazonItemsAsync();
-                }
-                catch(Exception er)
-                {
-                    Debug.WriteLine(er.StackTrace);
-                    MessageDialog message = new MessageDialog("An error occured! Please try again.");
-                    message.Title = "Error";
-                    await message.ShowAsync();
-                }
-                finally
-                {
-                    progressRing.IsActive = false;
-                    url_text_box.Text = "";
-                    desired_price_text_box.Text = "";
-                }
-            }
-            //Update the UI
-            
-        }
-
-        private async System.Threading.Tasks.Task StoreURLDataAsync(String url, String price)
-        {
-            Windows.Storage.StorageFolder storageFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
-            /*
-            if (storageFolder == null)
-            {
-                storageFolder = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFolderAsync("Data");
-            }
-            */
-            Windows.Storage.StorageFile file = await storageFolder.CreateFileAsync("urls.txt", Windows.Storage.CreationCollisionOption.OpenIfExists);
-
-            await Windows.Storage.FileIO.AppendTextAsync(file, url + " -br- " + price);
-        }
-
-        private async System.Threading.Tasks.Task AppendItemDataAsync(AmazonItem item)
-        {
-            Windows.Storage.StorageFolder storageFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
-            Windows.Storage.StorageFile file = await storageFolder.CreateFileAsync("items.txt", Windows.Storage.CreationCollisionOption.OpenIfExists);
-            string[] line = { item.ToString() };
-            await Windows.Storage.FileIO.AppendLinesAsync(file,line);
         }
 
         private async System.Threading.Tasks.Task<List<String>> getAmazonItemFromURLAsync(String url)
         {
             using (HttpClient httpClient = new HttpClient())
             {
-                try {
+                try
+                {
                     HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
                     HttpContent content = responseMessage.Content;
 
@@ -169,7 +95,7 @@ namespace AmazonPriceTracker
                     var priceOne = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='priceBlockStrikePriceString a - text - strike']");
                     var priceTwo = htmlDocument.DocumentNode.SelectSingleNode("//span[@id = 'priceblock_ourprice']");
                     var priceThree = htmlDocument.DocumentNode.SelectSingleNode("//span[@id = 'priceblock_dealprice']");
-                    var priceFour= htmlDocument.DocumentNode.SelectSingleNode("//span[@id = 'priceblock_saleprice']");
+                    var priceFour = htmlDocument.DocumentNode.SelectSingleNode("//span[@id = 'priceblock_saleprice']");
 
                     String price;
                     String stringTitle;
@@ -187,7 +113,6 @@ namespace AmazonPriceTracker
                     if (priceThree != null)
                     {
                         price = HttpUtility.HtmlDecode(priceThree.InnerText).Trim();
-                        Debug.WriteLine("Price3");
                         price = price.Replace("₹ ", "");
                         price = price.Replace("$ ", "");
                         price = price.Replace(",", "");
@@ -195,7 +120,6 @@ namespace AmazonPriceTracker
                     }
                     else if (priceFour != null)
                     {
-                        Debug.WriteLine("Price4");
                         price = HttpUtility.HtmlDecode(priceFour.InnerText).Trim();
                         price = price.Replace("₹ ", "");
                         price = price.Replace("$ ", "");
@@ -204,16 +128,14 @@ namespace AmazonPriceTracker
                     }
                     else if (priceTwo != null)
                     {
-                        Debug.WriteLine("Price2");
                         price = HttpUtility.HtmlDecode(priceTwo.InnerText).Trim();
                         price = price.Replace("₹ ", "");
                         price = price.Replace("$ ", "");
                         price = price.Replace(",", "");
                         status = "Available";
-                    } 
+                    }
                     else if (priceOne != null)
                     {
-                        Debug.WriteLine("Price1");
                         price = HttpUtility.HtmlDecode(priceOne.InnerText).Trim();
                         price = price.Replace("₹ ", "");
                         price = price.Replace("$ ", "");
@@ -231,66 +153,20 @@ namespace AmazonPriceTracker
                     itemProperties.Add(status);
                     itemProperties.Add(url);
                     return itemProperties;
-                
-                }catch(Exception e)
+
+                }
+                catch (Exception e)
                 {
-                    Debug.WriteLine(e.StackTrace);
-                    MessageDialog message = new MessageDialog("Please check the URL and try again!");
-                    message.Title = "Error";
-                    await message.ShowAsync();
-                    progressRing.IsActive = false;
                     return null;
                 }
-             }
-        }
-
-        private async void VisitContextMenuClick(object sender, RoutedEventArgs e)
-        {
-            var b = sender as FrameworkElement;
-            AmazonItem item = b.DataContext as AmazonItem;
-            var uri = new Uri(@""+item.productURL);
-
-            var success = await Windows.System.Launcher.LaunchUriAsync(uri);
-
-            if (success)
-            {
-                Debug.WriteLine("URI: Success");
             }
-            else
-            {
-                Debug.WriteLine("URI: failed");
-            }
-        }
-
-        private void CopyURLContextMenuClick(object sender, RoutedEventArgs e)
-        {
-            var b = sender as FrameworkElement;
-            AmazonItem item = b.DataContext as AmazonItem;
-
-            DataPackage dataPackage = new DataPackage();
-            dataPackage.RequestedOperation = DataPackageOperation.Copy;
-            dataPackage.SetText(item.productURL);
-            Clipboard.SetContent(dataPackage);
-        }
-
-        private void RemoveContextMenuClick(object sender, RoutedEventArgs e)
-        {
-            var b = sender as FrameworkElement;
-            AmazonItem item = b.DataContext as AmazonItem;
-            AmazonItems.Remove(item);
-            storeAmazonItemsAsync();
-        }
-
-        private async void DataGrid_Loaded(object sender, RoutedEventArgs e)
-        {
-           await getAmazonItemsAsync();
-           await updateAmazonItemsList();
         }
 
         private async Task<object> updateAmazonItemsList()
         {
             ObservableCollection<AmazonItem> dummList = new ObservableCollection<AmazonItem>();
 
+            _ = await getAmazonItemsAsync();
             if (AmazonItems != null)
             {
                 foreach (AmazonItem item in AmazonItems)
@@ -305,11 +181,12 @@ namespace AmazonPriceTracker
                 }
 
                 AmazonItems = dummList;
-                dataGrid.ItemsSource = AmazonItems;
                 await storeAmazonItemsAsync();
             }
             return null;
         }
+
+
 
         public void createWindowsToast(AmazonItem item)
         {
@@ -356,5 +233,6 @@ namespace AmazonPriceTracker
             ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
     }
-}
 
+   
+}
