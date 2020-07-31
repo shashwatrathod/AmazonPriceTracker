@@ -222,7 +222,6 @@ namespace AmazonPriceTrackerBackground
             var toast = new ToastNotification(content.GetXml());
             ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
-    }
 
-   
+    }
 }

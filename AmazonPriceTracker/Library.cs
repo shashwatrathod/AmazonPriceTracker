@@ -45,10 +45,10 @@ public class Library
                 await BackgroundExecutionManager.RequestAccessAsync();
                 BackgroundTaskBuilder builder = new BackgroundTaskBuilder();
                 builder.Name = typeof(AmazonPriceTrackerBackground.BackgroundTask).FullName;
-                TimeTrigger trigger = new TimeTrigger(30, false);
+                TimeTrigger trigger = new TimeTrigger(15, false);
                 Debug.WriteLine("Process Name: "+builder.Name);
                 builder.SetTrigger(trigger);
-                builder.TaskEntryPoint = builder.Name;
+                builder.TaskEntryPoint = "AmazonPriceTrackerBackground.BackgroundTask";
                 builder.Register();
                 registration = BackgroundTaskRegistration.AllTasks.Values.First();
                 Debug.WriteLine("TOGGLE SUCCESS");
