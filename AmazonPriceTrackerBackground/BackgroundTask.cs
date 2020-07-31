@@ -193,6 +193,7 @@ namespace AmazonPriceTrackerBackground
             ToastContent content = new ToastContent()
             {
                 Launch = item.productURL,
+                ActivationType = ToastActivationType.Protocol,
                 Visual = new ToastVisual()
                 {
                     BindingGeneric = new ToastBindingGeneric()
@@ -216,17 +217,6 @@ namespace AmazonPriceTrackerBackground
                         },
                     }
                 },
-
-                Actions = new ToastActionsCustom()
-                {
-                    Buttons =
-                    {
-                        new ToastButton("Visit", "openLink")
-                        {
-                            ActivationType = ToastActivationType.Protocol
-                        }
-                    }
-                }
             };
 
             var toast = new ToastNotification(content.GetXml());
