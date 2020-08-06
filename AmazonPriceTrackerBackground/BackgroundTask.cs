@@ -27,11 +27,14 @@ namespace AmazonPriceTrackerBackground
             try
             {
                 _ = await updateAmazonItemsList();
-                foreach (AmazonItem item in AmazonItems)
+                if (AmazonItems != null)
                 {
-                    if (item.productPrice <= item.desiredPrice)
+                    foreach (AmazonItem item in AmazonItems)
                     {
-                        createWindowsToast(item);
+                        if (item.productPrice <= item.desiredPrice && item.productStatus.Equals("Available") && item.previousPrice != item.productPrice)
+                        {
+                            createWindowsToast(item);
+                        }
                     }
                 }
 
@@ -176,6 +179,7 @@ namespace AmazonPriceTrackerBackground
                     if (itemProperties != null)
                     {
                         newItem = new AmazonItem(itemProperties[0], itemProperties[1], item.desiredPrice, itemProperties[2], itemProperties[3]);
+                        newItem.previousPrice = item.productPrice;
                         dummList.Add(newItem);
                     }
                 }

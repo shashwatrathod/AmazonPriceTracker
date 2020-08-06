@@ -14,15 +14,19 @@ namespace AmazonPriceTrackerBackground
         public String productURL { get; set; }
         public double desiredPrice { get; set; }
 
+        public double previousPrice { get; set; }
+
         public AmazonItem(String productTitle, String productPrice, double expectedPrice, String productStatus, String productURL)
         {
             this.productTitle = productTitle;
             this.productStatus = productStatus;
             this.productURL = productURL;
             this.desiredPrice = expectedPrice;
+           
 
             productPrice = productPrice.Replace(",", "").Replace(" ", "");
             this.productPrice = double.Parse(productPrice);
+            this.previousPrice = 0;
         }
 
         public String getStringPrice()
@@ -33,7 +37,7 @@ namespace AmazonPriceTrackerBackground
         override
         public sealed String ToString()
         {
-            return productTitle + " -br- " + productStatus + " -br- " + productPrice + " -br- " + productURL;
+            return productTitle + " -br- " + productStatus + " -br- " + productPrice + " -br- " + desiredPrice + " -br- " + productURL;
         }
 
         
